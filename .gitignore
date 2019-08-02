@@ -1,0 +1,11 @@
+#Packaging artifacts
+scripts/package_prj
+xgui/*_wrp_*.tcl
+xgui/mem_test_wrapper_v*.tcl
+
+#Simulation Artifacts
+testbench/top_tb/Data
+
+#Pycharm Files
+**/.idea/**/*
+*.pyc
