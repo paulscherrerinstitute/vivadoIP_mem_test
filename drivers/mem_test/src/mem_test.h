@@ -6,6 +6,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 //*******************************************************************************
 // Includes
 //*******************************************************************************
@@ -93,4 +97,8 @@ uint32_t MemTest_GetIterations(const uint32_t baseAddr);
 
 //Get Address of first error
 uint64_t MemTest_GetFirstErrorAddr(const uint32_t baseAddr);
+
+#ifdef __cplusplus
+}
+#endif
 
