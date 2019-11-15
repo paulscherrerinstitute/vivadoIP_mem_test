@@ -1,3 +1,7 @@
+## 1.2.1
+* Bugfixes
+  * Made driver C++ tolerant
+
 ## 1.2.0
 * First Open Source Release (older versions not kept in history)
 * Added license and copyright headers
