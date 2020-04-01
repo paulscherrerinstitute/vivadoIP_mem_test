@@ -96,6 +96,9 @@ architecture rtl of mem_test is
 		Errors			: unsigned(31 downto 0);
 		FirstErrAddr	: unsigned(AxiAddrWidth_g-1 downto 0);
 		Pattern			: std_logic_vector(AxiDataWidth_g-1 downto 0);
+		LastPattern	: std_logic_vector(AxiDataWidth_g-1 downto 0);
+		RdDat_Data	: std_logic_vector(AxiDataWidth_g-1 downto 0);
+		CheckPattern : std_logic;
 		PatternCnt		: unsigned(AxiAddrWidth_g-1 downto 0);
 		CmdWr_Addr		: unsigned(AxiAddrWidth_g-1 downto 0);
 		CmdWr_Vld		: std_logic;
@@ -195,6 +198,21 @@ begin
 		if RegStop_v = '1' then
 			v.ContRunning := '0';
 		end if;
+
+		-- *** Check Pattern ***
+		v.LastPattern := r.Pattern;
+		v.CheckPattern := '0';
+		v.RdDat_Data := RdDat_Data;
+		if (r.CheckPattern = '1') then
+					if r.RdDat_Data /= r.LastPattern then
+						v.Errors := r.Errors + 1;
+						v.FirstErrFound := '1';
+						if r.FirstErrFound = '0' then
+							AddrBeats_v := resize(r.PatternCnt, AddrBeats_v'length) + RegAddr_v(AxiAddrWidth_g-1 downto log2(AxiDataWidth_g/8)) - 1;
+							v.FirstErrAddr	:= shift_left(to_unsigned(0, log2(AxiDataWidth_g/8)) & AddrBeats_v, log2(AxiDataWidth_g/8));
+						end if;
+					end if;	
+    end if;
 		
 		-- *** Main Fsm ***
 		v.CmdWr_Vld := '0';
@@ -280,20 +298,14 @@ begin
 						v.RdDat_Rdy	:= '0';					
 					-- otherwise
 					else
-						v.PatternCnt	:= r.PatternCnt+1;
 						UpdatePattern_v := true;
 					end if;
-					
-					-- Pattern check
-					if RdDat_Data /= r.Pattern then
-						v.Errors := r.Errors + 1;
-						v.FirstErrFound := '1';
-						if r.FirstErrFound = '0' then
-							AddrBeats_v := resize(r.PatternCnt, AddrBeats_v'length) + RegAddr_v(AxiAddrWidth_g-1 downto log2(AxiDataWidth_g/8));
-							v.FirstErrAddr	:= shift_left(to_unsigned(0, log2(AxiDataWidth_g/8)) & AddrBeats_v, log2(AxiDataWidth_g/8));
-						end if;
-					end if;	
+					v.PatternCnt	:= r.PatternCnt+1;
+
+					-- check pattern one clock delayed while FSM continues:
+					v.CheckPattern := '1';
 				end if;
+
 
 			-- AXI ERROR
 			when AxiError_s =>
@@ -388,7 +400,9 @@ begin
 				r.CmdRd_Vld		<= '0';
 				r.RdDat_Rdy		<= '0';
 				r.ContRunning	<= '0';
+				r.CheckPattern	<= '0';
 			end if;
 		end if;
 	end process;	
 end architecture;
+
