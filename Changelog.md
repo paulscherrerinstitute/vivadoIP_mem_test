@@ -1,3 +1,6 @@
+## 1.3.0
+* Improved timing by adding pipeline registers
+
 ## 1.2.1
 * Bugfixes
   * Made driver C++ tolerant
