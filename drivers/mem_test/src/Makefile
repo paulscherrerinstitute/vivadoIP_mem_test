@@ -1,3 +1,4 @@
+DRIVER_LIB_VERSION = 1.0
 COMPILER=
 ARCHIVER=
 CP=cp
@@ -5,24 +6,35 @@ COMPILER_FLAGS=
 EXTRA_COMPILER_FLAGS=
 LIB=libxil.a
 
-RELEASEDIR=../../../lib
-INCLUDEDIR=../../../include
-INCLUDES=-I./. -I${INCLUDEDIR}
+CC_FLAGS = $(COMPILER_FLAGS)
+ECC_FLAGS = $(EXTRA_COMPILER_FLAGS)
 
-INCLUDEFILES=*.h
-LIBSOURCES=*.c
-OBJECTS = $(addsuffix .o, $(basename $(wildcard *.c)))
-ASSEMBLY_OBJECTS = $(addsuffix .o, $(basename $(wildcard *.S)))
+RELEASEDIR=../../../lib/
+INCLUDEDIR=../../../include/
+INCLUDES=-I./. -I$(INCLUDEDIR)
 
-libs:
+SRCFILES:=$(wildcard *.c)
+
+OBJECTS = $(addprefix $(RELEASEDIR), $(addsuffix .o, $(basename $(wildcard *.c))))
+
+libs: $(OBJECTS)
 	echo "Compiling mem_test..."
-	$(COMPILER) $(COMPILER_FLAGS) $(EXTRA_COMPILER_FLAGS) $(INCLUDES) $(LIBSOURCES)
-	$(ARCHIVER) -r ${RELEASEDIR}/${LIB} ${OBJECTS} ${ASSEMBLY_OBJECTS}
-	make clean
 
-include:
-	${CP} $(INCLUDEFILES) $(INCLUDEDIR)
+DEPFILES := $(SRCFILES:%.c=$(RELEASEDIR)%.d)
+
+include $(wildcard $(DEPFILES))
+
+include $(wildcard ../../../../dep.mk)
+
+$(RELEASEDIR)%.o: %.c
+	${COMPILER} $(CC_FLAGS) $(ECC_FLAGS) $(INCLUDES) $(DEPENDENCY_FLAGS) $< -o $@
+
+.PHONY: include
+include: $(addprefix $(INCLUDEDIR),$(wildcard *.h))
+
+$(INCLUDEDIR)%.h: %.h
+	$(CP) $< $@
 
 clean:
-	-@rm -rf ${OBJECTS} ${ASSEMBLY_OBJECTS}
-
+	rm -rf ${OBJECTS}
+	rm -rf $(DEPFILES)
